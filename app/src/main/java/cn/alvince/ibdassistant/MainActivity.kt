@@ -1,7 +1,6 @@
 package cn.alvince.ibdassistant
 
 import android.content.Context
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -34,16 +33,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.commit
-import cn.alvince.ibdassistant.alarm.InfusionAlarmFragment
+import cn.alvince.ibdassistant.alarm.AlarmScreen
 import cn.alvince.ibdassistant.main.model.NavItem
-import cn.alvince.ibdassistant.profile.MineFragment
-import cn.alvince.ibdassistant.toolbox.ToolboxFragment
+import cn.alvince.ibdassistant.main.screen.MineScreen
+import cn.alvince.ibdassistant.main.screen.ToolboxScreen
 import cn.alvince.ibdassistant.ui.theme.IBDAssistantTheme
 
 class MainActivity : FragmentActivity() {
@@ -89,7 +84,10 @@ class MainActivity : FragmentActivity() {
         fun MainPage(name: String, contentSupplier: (Context) -> View) {
             val contentAndroidViewSupplier = remember { contentSupplier }
             Column(Modifier.fillMaxWidth()) {
-                Spacer(Modifier.statusBarsPadding().fillMaxWidth())
+                Spacer(
+                    Modifier
+                        .statusBarsPadding()
+                        .fillMaxWidth())
                 val navPageTag = remember { mutableStateOf(NavItem.Home) }
                 Box(
                     Modifier
@@ -143,51 +141,18 @@ class MainActivity : FragmentActivity() {
         @Composable
         fun MainPageContent(navItemState: MutableState<NavItem>, modifier: Modifier = Modifier, contentSupplier: (Context) -> View) {
             navItemState.value.also { navItem ->
-                val view = LocalView.current
-                val fragmentManager = remember(view) { FragmentManager.findFragmentManager(view) }
-                AndroidView(
-                    factory = { context -> contentSupplier(context) },
-                    modifier,
-                    update = {
-                        fragmentManager.installFragment(navItem.tag) {
-                            when (navItem) {
-                                NavItem.Home -> InfusionAlarmFragment()
-                                NavItem.Toolbox -> ToolboxFragment()
-                                NavItem.Mine -> MineFragment()
-                            }
-                        }
-                    }
-                )
-//                AndroidFragment<InfusionAlarmFragment>(Modifier.fillMaxWidth())
+                when (navItem) {
+                    NavItem.Home -> AlarmScreen(modifier)
+                    NavItem.Toolbox -> ToolboxScreen()
+                    NavItem.Mine -> MineScreen()
+                }
             }
-        }
-
-        private fun FragmentManager.installFragment(tag: String, instantiate: () -> Fragment) {
-            findFragmentByTag(tag)
-                ?.also {
-                    commit {
-                        primaryNavigationFragment?.also { f ->
-                            if (f != it) {
-                                hide(f)
-                            }
-                        }
-                        show(it)
-                        setPrimaryNavigationFragment(it)
-                    }
-                }
-                ?: instantiate().also {
-                    commit {
-                        primaryNavigationFragment?.also { f -> hide(f) }
-                        add(R.id.contentMainPage, it, tag)
-                        setPrimaryNavigationFragment(it)
-                    }
-                }
         }
     }
 }
 
 @Preview(showBackground = true, name = "Light Mode")
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode")
+//@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode")
 @Composable
 fun MainPagePreview() {
     IBDAssistantTheme {
